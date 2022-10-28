@@ -9,9 +9,20 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 
@@ -21,44 +32,17 @@ import edu.uncc.inclass10.models.Post;
 
 public class PostsFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    private FirebaseAuth mAuth;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    final String TAG = "test";
 
     public PostsFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment PostsFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static PostsFragment newInstance(String param1, String param2) {
-        PostsFragment fragment = new PostsFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     FragmentPostsBinding binding;
@@ -73,6 +57,9 @@ public class PostsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        getName();
+        getPosts();
 
         binding.buttonCreatePost.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -139,6 +126,66 @@ public class PostsFragment extends Fragment {
             }
         }
 
+    }
+
+    private void getName() {
+
+        mAuth = FirebaseAuth.getInstance();
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("user_info").get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        Log.d(TAG, "onSuccess: ");
+                        for (QueryDocumentSnapshot document: queryDocumentSnapshots){
+                            if (document.getString("user_id").equals(mAuth.getCurrentUser().getUid())){
+                                binding.textViewTitle.setText(document.getString("full_name"));
+                            }
+                        }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "onFailure: " + e.getMessage());
+                    }
+                });
+    }
+
+    private void getPosts(){
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("posts").get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        Log.d(TAG, "onSuccess: ");
+                        for (QueryDocumentSnapshot document: queryDocumentSnapshots){
+
+                            Log.d(TAG, "onSuccess: " + document.getId());
+                            Log.d(TAG, "onSuccess: " + document.getData());
+
+                            Post post = new Post();
+                            post.created_by_name = document.getString("created_by_name");
+                            post.post_id = document.getString("post_id");
+                            post.created_by_uid = document.getString("created_by_uid");
+                            post.post_text = document.getString("post_text");
+                            post.created_at = document.getString("created_at");
+
+                            mPosts.add(post);
+                        }
+                        postsAdapter.notifyDataSetChanged();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d(TAG, "onFailure: " + e.getMessage());
+                        Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     PostsListener mListener;

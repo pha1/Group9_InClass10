@@ -14,9 +14,14 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
 
 import edu.uncc.inclass10.databinding.FragmentSignUpBinding;
 
@@ -67,18 +72,29 @@ public class SignUpFragment extends Fragment {
                 } else if (password.isEmpty()){
                     Toast.makeText(getActivity(), "Enter valid password!", Toast.LENGTH_SHORT).show();
                 } else {
+                    // Get the Firebase Authentication instance
                     mAuth = FirebaseAuth.getInstance();
 
+                    // Firebase create an account method
                     mAuth.createUserWithEmailAndPassword(email, password)
                             .addOnCompleteListener(getActivity(), new OnCompleteListener<AuthResult>() {
                                 @Override
                                 public void onComplete(@NonNull Task<AuthResult> task) {
                                     if(task.isSuccessful()) {
+
+                                        // Log successful
                                         Log.d(TAG, "onComplete: Sign Up Successful.");
+
+                                        // Store the name into the database
+                                        setName(name);
+
+                                        // Signs the new user in, go to Posts
+                                        // Implemented by Main Activity
                                         mListener.registerSuccessful();
                                     } else {
                                         Log.d(TAG, "onComplete: Sign Up Error.");
                                         Log.d(TAG, "onComplete: " + task.getException().getMessage());
+                                        // Displays response message by Firebase
                                         Toast.makeText(getActivity(), task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                                     }
                                 }
@@ -89,6 +105,23 @@ public class SignUpFragment extends Fragment {
 
         getActivity().setTitle(R.string.create_account_label);
 
+    }
+
+    private void setName(String name) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        HashMap<String, Object> user = new HashMap<>();
+        user.put("full_name", name);
+        user.put("user_id", mAuth.getCurrentUser().getUid());
+
+        db.collection("user_info")
+                .add(user)
+                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                    @Override
+                    public void onSuccess(DocumentReference documentReference) {
+                        Log.d(TAG, "onSuccess: User added.");
+                    }
+                });
     }
 
     SignUpListener mListener;

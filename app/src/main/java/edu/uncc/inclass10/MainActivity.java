@@ -16,12 +16,15 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Log
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Get the FirebaseAuth instance to see if a user is logged in
         mAuth = FirebaseAuth.getInstance();
 
+        // If the user is not logged in
         if(mAuth.getCurrentUser() == null) {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.containerView, new LoginFragment())
                     .commit();
+        // If the user is logged in
         } else {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.containerView, new PostsFragment())
@@ -37,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Log
     }
 
     /**
-     * This method changes from Login Screen to Posts Screen.
+     * This method changes from Login to Posts if the user successfully logs in
      */
     @Override
     public void loginSuccessful() {
@@ -46,6 +49,9 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Log
                 .commit();
     }
 
+    /**
+     * If the user successfully creates an account, go to Posts
+     */
     @Override
     public void registerSuccessful() {
         getSupportFragmentManager().beginTransaction()
@@ -60,8 +66,12 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Log
                 .commit();
     }
 
+    /**
+     * Logs the user out, then go to Login Page
+     */
     @Override
     public void logout() {
+        // Sign out of Firebase
         FirebaseAuth.getInstance().signOut();
 
         getSupportFragmentManager().beginTransaction()

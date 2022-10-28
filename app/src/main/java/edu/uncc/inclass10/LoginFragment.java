@@ -57,16 +57,24 @@ public class LoginFragment extends Fragment {
                 } else if (password.isEmpty()){
                     Toast.makeText(getActivity(), "Enter valid password!", Toast.LENGTH_SHORT).show();
                 } else {
+
+                    // Get the Firebase Authentication instance
                     mAuth = FirebaseAuth.getInstance();
 
+                    // Firebase Sign in method
                     mAuth.signInWithEmailAndPassword(email, password)
+                            // When completed
                             .addOnCompleteListener(getActivity(), new OnCompleteListener<AuthResult>() {
                                 @Override
                                 public void onComplete(@NonNull Task<AuthResult> task) {
+                                    // If the email and password are authenticated, sign in
                                     if(task.isSuccessful()){
                                         Log.d(TAG, "onComplete: Logged in Successfully.");
                                         Log.d(TAG, "onComplete: " + mAuth.getCurrentUser().getUid());
+
+                                        // Sign in, implemented by Main Activity
                                         mListener.loginSuccessful();
+                                    // If not, display what the response from Firebase is
                                     } else {
                                         Log.d(TAG, "onComplete: Error logging in.");
                                         Log.d(TAG, "onComplete: " + task.getException().getMessage());
