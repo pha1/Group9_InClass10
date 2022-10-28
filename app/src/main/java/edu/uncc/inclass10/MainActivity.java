@@ -9,14 +9,24 @@ import com.google.firebase.auth.FirebaseAuth;
 public class MainActivity extends AppCompatActivity implements LoginFragment.LoginListener,
         SignUpFragment.SignUpListener, PostsFragment.PostsListener, CreatePostFragment.CreatePostListener {
 
+    FirebaseAuth mAuth;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        getSupportFragmentManager().beginTransaction()
-                .add(R.id.containerView, new LoginFragment())
-                .commit();
+        mAuth = FirebaseAuth.getInstance();
+
+        if(mAuth.getCurrentUser() == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.containerView, new LoginFragment())
+                    .commit();
+        } else {
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.containerView, new PostsFragment())
+                    .commit();
+        }
     }
 
     @Override
@@ -26,7 +36,6 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Log
                 .commit();
     }
 
-    // TODO Get the data and pass it to the PostsFragment
     /**
      * This method changes from Login Screen to Posts Screen.
      */
