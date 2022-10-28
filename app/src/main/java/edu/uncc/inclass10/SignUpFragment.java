@@ -7,14 +7,24 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+
 import edu.uncc.inclass10.databinding.FragmentSignUpBinding;
 
 public class SignUpFragment extends Fragment {
+
+    private FirebaseAuth mAuth;
+    final String TAG = "test";
+
     public SignUpFragment() {
         // Required empty public constructor
     }
@@ -57,7 +67,22 @@ public class SignUpFragment extends Fragment {
                 } else if (password.isEmpty()){
                     Toast.makeText(getActivity(), "Enter valid password!", Toast.LENGTH_SHORT).show();
                 } else {
+                    mAuth = FirebaseAuth.getInstance();
 
+                    mAuth.createUserWithEmailAndPassword(email, password)
+                            .addOnCompleteListener(getActivity(), new OnCompleteListener<AuthResult>() {
+                                @Override
+                                public void onComplete(@NonNull Task<AuthResult> task) {
+                                    if(task.isSuccessful()) {
+                                        Log.d(TAG, "onComplete: Sign Up Successful.");
+                                        mListener.registerSuccessful();
+                                    } else {
+                                        Log.d(TAG, "onComplete: Sign Up Error.");
+                                        Log.d(TAG, "onComplete: " + task.getException().getMessage());
+                                        Toast.makeText(getActivity(), task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            });
                 }
             }
         });
@@ -75,6 +100,7 @@ public class SignUpFragment extends Fragment {
     }
 
     interface SignUpListener {
+        void registerSuccessful();
         void login();
     }
 }

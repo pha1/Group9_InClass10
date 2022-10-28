@@ -70,12 +70,7 @@ public class LoginFragment extends Fragment {
                                     } else {
                                         Log.d(TAG, "onComplete: Error logging in.");
                                         Log.d(TAG, "onComplete: " + task.getException().getMessage());
-                                        getActivity().runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                Toast.makeText(getActivity(), task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                                            }
-                                        });
+                                        Toast.makeText(getActivity(), task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                                     }
                                 }
                             });
