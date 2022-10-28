@@ -1,3 +1,10 @@
+/**
+ * In Class 10
+ * Group9_InClass10
+ * Phi Ha
+ * Srinath Dittakavi
+ */
+
 package edu.uncc.inclass10;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -80,9 +87,9 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Log
     }
 
     @Override
-    public void createPost() {
+    public void createPost(String name) {
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.containerView, new CreatePostFragment())
+                .replace(R.id.containerView, CreatePostFragment.newInstance(name))
                 .addToBackStack(null)
                 .commit();
     }

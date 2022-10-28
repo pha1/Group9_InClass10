@@ -1,3 +1,10 @@
+/**
+ * In Class 10
+ * Group9_InClass10
+ * Phi Ha
+ * Srinath Dittakavi
+ */
+
 package edu.uncc.inclass10;
 
 import android.content.Context;
@@ -108,12 +115,16 @@ public class SignUpFragment extends Fragment {
     }
 
     private void setName(String name) {
+        // Database
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+        // HashMap user
         HashMap<String, Object> user = new HashMap<>();
         user.put("full_name", name);
         user.put("user_id", mAuth.getCurrentUser().getUid());
 
+        // Collection
+        // Add the user
         db.collection("user_info")
                 .add(user)
                 .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {

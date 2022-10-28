@@ -1,3 +1,10 @@
+/**
+ * In Class 10
+ * Group9_InClass10
+ * Phi Ha
+ * Srinath Dittakavi
+ */
+
 package edu.uncc.inclass10.models;
 
 import java.io.Serializable;

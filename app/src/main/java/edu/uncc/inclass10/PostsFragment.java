@@ -1,3 +1,10 @@
+/**
+ * In Class 10
+ * Group9_InClass10
+ * Phi Ha
+ * Srinath Dittakavi
+ */
+
 package edu.uncc.inclass10;
 
 import android.content.Context;
@@ -39,6 +46,8 @@ public class PostsFragment extends Fragment {
 
     final String TAG = "test";
 
+    private String name;
+
     public PostsFragment() {
         // Required empty public constructor
     }
@@ -61,13 +70,16 @@ public class PostsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // This method sets the name as the Title
         getName();
+
+        // This method gets the Posts and tells the adapter to notify changes
         getPosts();
 
         binding.buttonCreatePost.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.createPost();
+                mListener.createPost(name);
             }
         });
 
@@ -120,7 +132,10 @@ public class PostsFragment extends Fragment {
                 mBinding.textViewPost.setText(post.getPost_text());
                 mBinding.textViewCreatedBy.setText(post.getCreated_by_name());
                 mBinding.textViewCreatedAt.setText(post.getCreated_at());
-                if (mAuth.getCurrentUser().getUid().equals(post.created_by_uid)) {
+
+                // This checks to see if the current user id is the same as the post's creator user
+                // id, if so they can be deleted, otherwise make the button invisible.
+                if (mAuth.getCurrentUser().getUid().equals(mPost.getCreated_by_uid())) {
                     mBinding.imageViewDelete.setVisibility(View.VISIBLE);
                 } else {
                     mBinding.imageViewDelete.setVisibility(View.INVISIBLE);
@@ -136,20 +151,37 @@ public class PostsFragment extends Fragment {
 
     }
 
+    /**
+     * This method updates the name variable by retrieving it from the document.
+     * @param document
+     */
+    private void updateName(QueryDocumentSnapshot document) {
+        this.name = document.getString("full_name");
+        binding.textViewTitle.setText(name);
+    }
+
+    /**
+     * This method accesses the database and finds the document that has the same user_id
+     * as the user. Then it passes the document to another method to get the name.
+     */
     private void getName() {
 
+        // Get Authentication (User) Instance
         mAuth = FirebaseAuth.getInstance();
 
+        // Get Database Instance
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+        // Get the collection "user_info"
         db.collection("user_info").get()
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
                     public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                         Log.d(TAG, "onSuccess: ");
+                        // Once retrieved, loop to find the document with matching user_id
                         for (QueryDocumentSnapshot document: queryDocumentSnapshots){
                             if (document.getString("user_id").equals(mAuth.getCurrentUser().getUid())){
-                                binding.textViewTitle.setText(document.getString("full_name"));
+                                updateName(document);
                             }
                         }
                     }
@@ -162,31 +194,52 @@ public class PostsFragment extends Fragment {
                 });
     }
 
+    /**
+     * This method gets posts from the database and adds them to the arraylist mPosts
+     */
     private void getPosts(){
+        // Database
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+        // Collection "posts"
         db.collection("posts")
                 .addSnapshotListener(new EventListener<QuerySnapshot>() {
                     @Override
                     public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+
+                        // Clear the arraylist every time the database is accessed or changes
                         mPosts.clear();
+                        // Loop through the documents
                         for (QueryDocumentSnapshot document: value){
 
                             Log.d(TAG, "onSuccess: " + document.getId());
                             Log.d(TAG, "onSuccess: " + document.getData());
 
+                            // Convert document to Post Object
                             Post post = document.toObject(Post.class);
 
+                            // Add post to arraylist
                             mPosts.add(post);
                         }
+                        // Notify the changes when done adding all posts
                         postsAdapter.notifyDataSetChanged();
                     }
                 });
     }
 
+    /**
+     * This method deletes the selected post from the database
+     * by accessing its post_id and deleting the proper matching document id
+     * @param post the post object selected
+     */
     private void deletePost(Post post) {
+
+        // Database
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+        // Collection
+        // Select the document by the post_id
+        // Then delete
         db.collection("posts").document(post.post_id)
                 .delete()
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -212,6 +265,6 @@ public class PostsFragment extends Fragment {
 
     interface PostsListener{
         void logout();
-        void createPost();
+        void createPost(String name);
     }
 }
