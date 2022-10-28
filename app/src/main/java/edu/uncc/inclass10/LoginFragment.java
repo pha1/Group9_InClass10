@@ -7,14 +7,24 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+
 import edu.uncc.inclass10.databinding.FragmentLoginBinding;
 
 public class LoginFragment extends Fragment {
+
+    private FirebaseAuth mAuth;
+    final String TAG = "test";
+
     public LoginFragment() {
         // Required empty public constructor
     }
@@ -47,9 +57,28 @@ public class LoginFragment extends Fragment {
                 } else if (password.isEmpty()){
                     Toast.makeText(getActivity(), "Enter valid password!", Toast.LENGTH_SHORT).show();
                 } else {
+                    mAuth = FirebaseAuth.getInstance();
 
-
-
+                    mAuth.signInWithEmailAndPassword(email, password)
+                            .addOnCompleteListener(getActivity(), new OnCompleteListener<AuthResult>() {
+                                @Override
+                                public void onComplete(@NonNull Task<AuthResult> task) {
+                                    if(task.isSuccessful()){
+                                        Log.d(TAG, "onComplete: Logged in Successfully.");
+                                        Log.d(TAG, "onComplete: " + mAuth.getCurrentUser().getUid());
+                                        mListener.loginSuccessful();
+                                    } else {
+                                        Log.d(TAG, "onComplete: Error logging in.");
+                                        Log.d(TAG, "onComplete: " + task.getException().getMessage());
+                                        getActivity().runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Toast.makeText(getActivity(), task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                                    }
+                                }
+                            });
                 }
             }
         });
@@ -74,5 +103,6 @@ public class LoginFragment extends Fragment {
 
     interface LoginListener {
         void createNewAccount();
+        void loginSuccessful();
     }
 }

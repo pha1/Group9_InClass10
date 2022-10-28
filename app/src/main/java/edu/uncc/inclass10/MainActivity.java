@@ -24,6 +24,17 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Log
                 .commit();
     }
 
+    // TODO Get the data and pass it to the PostsFragment
+    /**
+     * This method changes from Login Screen to Posts Screen.
+     */
+    @Override
+    public void loginSuccessful() {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.containerView, new PostsFragment())
+                .commit();
+    }
+
     @Override
     public void login() {
         getSupportFragmentManager().beginTransaction()
