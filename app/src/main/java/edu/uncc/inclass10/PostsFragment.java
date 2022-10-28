@@ -20,11 +20,14 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import edu.uncc.inclass10.databinding.FragmentPostsBinding;
 import edu.uncc.inclass10.databinding.PostRowItemBinding;
@@ -117,10 +120,15 @@ public class PostsFragment extends Fragment {
                 mBinding.textViewPost.setText(post.getPost_text());
                 mBinding.textViewCreatedBy.setText(post.getCreated_by_name());
                 mBinding.textViewCreatedAt.setText(post.getCreated_at());
+                if (mAuth.getCurrentUser().getUid().equals(post.created_by_uid)) {
+                    mBinding.imageViewDelete.setVisibility(View.VISIBLE);
+                } else {
+                    mBinding.imageViewDelete.setVisibility(View.INVISIBLE);
+                }
                 mBinding.imageViewDelete.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
+                        deletePost(post);
                     }
                 });
             }
@@ -157,33 +165,40 @@ public class PostsFragment extends Fragment {
     private void getPosts(){
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        db.collection("posts").get()
-                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+        db.collection("posts")
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
                     @Override
-                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                        Log.d(TAG, "onSuccess: ");
-                        for (QueryDocumentSnapshot document: queryDocumentSnapshots){
+                    public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                        mPosts.clear();
+                        for (QueryDocumentSnapshot document: value){
 
                             Log.d(TAG, "onSuccess: " + document.getId());
                             Log.d(TAG, "onSuccess: " + document.getData());
 
-                            Post post = new Post();
-                            post.created_by_name = document.getString("created_by_name");
-                            post.post_id = document.getString("post_id");
-                            post.created_by_uid = document.getString("created_by_uid");
-                            post.post_text = document.getString("post_text");
-                            post.created_at = document.getString("created_at");
+                            Post post = document.toObject(Post.class);
 
                             mPosts.add(post);
                         }
                         postsAdapter.notifyDataSetChanged();
                     }
+                });
+    }
+
+    private void deletePost(Post post) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("posts").document(post.post_id)
+                .delete()
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void unused) {
+                        Log.d(TAG, "onSuccess: Post deleted successfully!");
+                    }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.d(TAG, "onFailure: " + e.getMessage());
-                        Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, "onFailure: Error deleting post.");
                     }
                 });
     }
